@@ -16,11 +16,20 @@ contract LoyaltyApp is ERC721, Ownable {
     // Flag to determine if token is transferable
     bool private isTokenTransferable;
 
+    // Mapping to store voting power of each token holder
+    mapping(address => uint256) private votingPower;
+
+    // Mapping to store the votes of each token holder
+    mapping(address => bool) private hasVoted;
+
     // Event emitted when a new token is minted
     event TokenMinted(address indexed user, uint256 indexed tokenId);
 
     // Event emitted when a token is burned
     event TokenBurned(address indexed user, uint256 indexed tokenId);
+
+    // Event emitted when a token holder casts a vote
+    event Voted(address indexed voter);
 
     // Modifier to check if token is transferable
     modifier onlyTransferable() {
@@ -75,16 +84,23 @@ contract LoyaltyApp is ERC721, Ownable {
     }
 
     /**
-     * @dev Check if a token is burnt.
+     * @dev Vote on a decision.
+     * Token holders can participate in decision-making processes.
      */
-    function isTokenBurned(uint256 tokenId) external view returns (bool) {
-        return isTokenBurnt[tokenId];
+    function vote() external {
+        require(balanceOf(_msgSender()) > 0, "No tokens owned");
+        require(!hasVoted[_msgSender()], "Already voted");
+
+        votingPower[_msgSender()] = balanceOf(_msgSender());
+        hasVoted[_msgSender()] = true;
+
+        emit Voted(_msgSender());
     }
 
     /**
-     * @dev Check if the token is transferable.
+     * @dev Get the voting power of a token holder.
      */
-    function getTransferability() external view returns (bool) {
-        return isTokenTransferable;
+    function getVotingPower(address holder) external view returns (uint256) {
+        return votingPower[holder];
     }
 }
